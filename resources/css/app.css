@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-slate-50 text-slate-900 antialiased;
+    }
+
+    /* Axis ticks and table figures must align vertically; headline numbers keep
+       proportional figures, which read better at large sizes. */
+    .tabular {
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+@layer components {
+    .card {
+        @apply rounded-xl bg-white shadow-card ring-1 ring-slate-900/5;
+    }
+
+    .card-pad {
+        @apply p-5 sm:p-6;
+    }
+
+    .label {
+        @apply block text-sm font-medium text-slate-700;
+    }
+
+    .input {
+        @apply w-full rounded-lg border-slate-300 text-sm shadow-sm placeholder:text-slate-400
+               focus:border-brand-500 focus:ring-brand-500;
+    }
+
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold
+               transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500
+               focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .btn-primary {
+        @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700;
+    }
+
+    .btn-secondary {
+        @apply btn bg-white text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50;
+    }
+
+    .btn-danger {
+        @apply btn bg-state-critical text-white shadow-sm hover:brightness-95;
+    }
+
+    .btn-ghost {
+        @apply btn text-slate-600 hover:bg-slate-100;
+    }
+
+    .badge {
+        @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset;
+    }
+
+    /* Monospace so a printed code can be read back character by character. */
+    .code-chip {
+        @apply inline-flex items-center rounded-md bg-slate-100 px-2 py-1 font-mono text-xs
+               font-semibold tracking-wider text-slate-700 ring-1 ring-inset ring-slate-900/5;
+    }
+
+    .th {
+        @apply whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500;
+    }
+
+    .td {
+        @apply whitespace-nowrap px-4 py-3 text-sm text-slate-700;
+    }
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}
