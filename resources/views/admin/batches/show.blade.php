@@ -6,12 +6,19 @@
             <a href="{{ route('admin.batches.print', $batch) }}" target="_blank" class="btn-secondary">
                 <x-icon name="printer" class="h-4 w-4" /> Print sheet
             </a>
-            <a href="{{ route('admin.batches.download', $batch) }}" class="btn-secondary">
-                <x-icon name="download" class="h-4 w-4" /> PNG ZIP
-            </a>
-            <a href="{{ route('admin.batches.download', [$batch, 'format' => 'svg']) }}" class="btn-secondary">
-                <x-icon name="download" class="h-4 w-4" /> SVG ZIP
-            </a>
+            <x-ui.export-menu :route="route('admin.qr-codes.export')"
+                              :params="['batch_id' => $batch->id]" label="Export URLs">
+                <x-slot:extra>
+                    <x-ui.export-menu-item :href="route('admin.batches.download', $batch)"
+                        icon="qr" description="Printable artwork for every code here">
+                        QR images (PNG ZIP)
+                    </x-ui.export-menu-item>
+                    <x-ui.export-menu-item :href="route('admin.batches.download', [$batch, 'format' => 'svg'])"
+                        icon="qr" description="Vector artwork for large printing">
+                        QR images (SVG ZIP)
+                    </x-ui.export-menu-item>
+                </x-slot:extra>
+            </x-ui.export-menu>
             <a href="{{ route('admin.qr-codes.index', ['batch_id' => $batch->id]) }}" class="btn-primary">
                 Manage &amp; assign
             </a>

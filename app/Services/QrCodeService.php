@@ -37,7 +37,7 @@ class QrCodeService
 
         return DB::transaction(function () use ($data, $quantity, $userId, $actor) {
             $batch = QrBatch::create([
-                'name' => $data['name'] ?: 'Batch '.now()->format('d M Y H:i'),
+                'name' => ($data['name'] ?? null) ?: 'Batch '.now()->format('d M Y H:i'),
                 'label_prefix' => $data['label_prefix'] ?? null,
                 'quantity' => $quantity,
                 'notes' => $data['notes'] ?? null,

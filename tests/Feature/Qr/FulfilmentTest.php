@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Qr;
 
+use App\Models\QrBatch;
 use App\Models\QrCode;
 use App\Models\QrCodeActivity;
 use App\Models\User;
@@ -125,6 +126,57 @@ class FulfilmentTest extends TestCase
         $this->assertSame('https://first.example.com', $entry->meta['from']);
         $this->assertSame('https://second.example.com', $entry->meta['to']);
         $this->assertSame($admin->id, $entry->actor_id);
+    }
+
+    /** The quick-generate box on the QR codes page posts nothing but a number. */
+    public function test_typing_a_number_alone_generates_that_many_codes(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)
+            ->post(route('admin.batches.store'), ['quantity' => 100])
+            ->assertRedirect();
+
+        $this->assertSame(100, QrCode::count());
+        $this->assertSame(100, QrCode::unassigned()->count());
+        // A batch still gets a usable name even though none was typed.
+        $this->assertNotEmpty(QrBatch::sole()->name);
+    }
+
+    public function test_the_quick_generate_box_can_assign_straight_to_a_customer(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $customer = User::factory()->create();
+
+        $this->actingAs($admin)->post(route('admin.batches.store'), [
+            'quantity' => 7,
+            'user_id' => $customer->id,
+            'label_prefix' => 'Standee',
+        ])->assertRedirect();
+
+        $this->assertSame(7, $customer->qrCodes()->count());
+    }
+
+    public function test_the_quantity_must_be_a_positive_number(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        foreach ([0, -5, 'ten'] as $invalid) {
+            $this->actingAs($admin)
+                ->post(route('admin.batches.store'), ['quantity' => $invalid])
+                ->assertSessionHasErrors('quantity');
+        }
+
+        $this->assertSame(0, QrCode::count());
+    }
+
+    public function test_a_customer_cannot_generate_codes(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->post(route('admin.batches.store'), ['quantity' => 50])
+            ->assertForbidden();
+
+        $this->assertSame(0, QrCode::count());
     }
 
     public function test_the_batch_size_limit_is_enforced(): void

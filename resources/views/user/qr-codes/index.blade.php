@@ -1,6 +1,10 @@
 <x-layouts.dashboard title="My QR codes">
     <x-ui.page-header title="My QR codes"
         description="Change where any code points. The printed artwork never changes.">
+        <x-slot:actions>
+            <x-ui.export-menu :route="route('qr-codes.export')" :params="request()->query()"
+                              label="Export my links" />
+        </x-slot:actions>
     </x-ui.page-header>
 
     {{-- Filters in one row above the table. --}}

@@ -21,10 +21,12 @@ Create the customer and their codes in one step — *Customers → Add customer*
 labelled and assigned, and they appear in that customer's dashboard immediately.
 
 **2. You pre-print 100 and hand them out later.**
-*Batches → Generate QR codes*, leave the customer blank. You get 100 unassigned
-codes, a ZIP of printable artwork and a print-ready A4 sheet. When somebody walks
-in, go to *QR codes*, tick any 5, and use the bulk bar: **Assign to customer**.
-They show up in that customer's dashboard straight away.
+On *QR codes* there is a box at the top: type how many you want, hit **Generate**,
+and that many codes are created in one go. (Leave "Assign to" blank to keep them
+as stock; pick a customer to hand them over immediately.) You get a ZIP of
+printable artwork and a print-ready A4 sheet. When somebody walks in, tick any 5
+in the table and use the bulk bar: **Assign to customer**. They show up in that
+customer's dashboard straight away.
 
 Either way the super admin can repoint any code at any time, and can lock an
 individual code so the customer cannot change it themselves.
@@ -36,8 +38,9 @@ individual code so the customer cannot change it themselves.
 ### Super admin console (`/admin`)
 - **Overview** — scans over time, inventory health, device and country mix,
   top codes, customers needing follow-up, recent activity
-- **QR codes** — filter by status, customer or batch; bulk assign / unassign /
-  pause / resume / delete; CSV export; ZIP of artwork for the current filter
+- **QR codes** — a "how many?" box that generates codes in one go; filter by
+  status, customer or batch; bulk assign / unassign / pause / resume / delete;
+  **Export URLs** to Excel or CSV; ZIP of artwork for the current filter
 - **Batches** — every print run, with a grid preview, ZIP download (PNG or SVG)
   and a printable A4 sheet at 2–6 codes per row
 - **Customers** — create (optionally with their codes), edit, suspend, delete,
@@ -52,7 +55,8 @@ individual code so the customer cannot change it themselves.
 - A clear prompt for any code that still has no destination
 - Per-code page: artwork preview, PNG/SVG download, copyable short link,
   destination editor, pause/resume, full destination history, per-code analytics
-- CSV export of their own scan data
+- **Export my links** — their codes and destinations as Excel or CSV
+- Excel/CSV export of their own scan data
 
 ### Scan tracking
 Recorded per scan: device type, OS, browser (including in-app browsers like
@@ -66,6 +70,28 @@ visitor was actually sent to.
   scan from a new visitor.
 - **Country comes free behind Cloudflare** via the `CF-IPCountry` header. An
   optional queued lookup (`QR_GEO_LOOKUP=true`) covers other hosting.
+
+---
+
+## Exporting
+
+Every export button offers **Excel (.xlsx)** or **CSV**, and always exports
+exactly what the filters on screen are showing — filter to one customer, one
+batch or one status first and the file matches.
+
+| Where | What you get |
+|---|---|
+| Admin → QR codes → *Export URLs* | Code, printed link, destination, customer, batch, status, scan counts |
+| Admin → Batches → a batch → *Export URLs* | The same, for that print run only |
+| Admin → Customers → *Export customers* | Contact details, code counts, total scans, last login |
+| Admin → Analytics → *Export scans* | One row per scan, up to 50,000 |
+| Customer → My QR codes → *Export my links* | Their own codes and destinations |
+| Customer → Analytics → *Export scans* | Their own scan history, up to 20,000 |
+
+Excel files are written with OpenSpout, which streams rows to disk rather than
+building the whole workbook in memory, so large exports stay cheap. Scan counts
+are written as real numbers so they can be summed in a spreadsheet; codes stay
+text so they are never mangled into scientific notation.
 
 ---
 
@@ -138,6 +164,7 @@ The ones that matter most:
 | `app/Services/ScanRecorder.php` | Per-scan write path. Never allowed to break a redirect. |
 | `app/Services/AnalyticsService.php` | Every number on every dashboard. Takes a base query so one implementation serves global, per-customer and per-code views. |
 | `app/Services/QrImageService.php` | PNG/SVG rendering (`endroid/qr-code`). |
+| `app/Support/SpreadsheetExporter.php` | One place that turns headings + a row iterator into an Excel or CSV download. |
 | `app/Services/UserAgentParser.php` | Dependency-free device/OS/browser/bot detection. |
 | `app/Policies/` | A customer can only ever see and edit their own codes. |
 | `resources/js/charts.js` | Chart.js setup. Colours are a validated, colourblind-safe categorical order. |
@@ -158,6 +185,6 @@ The ones that matter most:
 php artisan test
 ```
 
-76 tests cover the redirect engine (302-not-301, no-store, case-insensitive
+96 tests cover the redirect engine (302-not-301, no-store, case-insensitive
 matching, bot exclusion, IP hashing, unique counting), both fulfilment workflows,
 tenant isolation, the open-redirect guard, and that every page renders with data.

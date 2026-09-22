@@ -55,6 +55,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/dashboard', User\DashboardController::class)->name('dashboard');
 
     Route::get('/qr-codes', [User\QrCodeController::class, 'index'])->name('qr-codes.index');
+    // Declared before /qr-codes/{qrCode} so "export" is never read as a code.
+    Route::get('/qr-codes/export', [User\QrCodeController::class, 'export'])->name('qr-codes.export');
     Route::get('/qr-codes/{qrCode}', [User\QrCodeController::class, 'show'])->name('qr-codes.show');
     Route::patch('/qr-codes/{qrCode}', [User\QrCodeController::class, 'update'])->name('qr-codes.update');
     Route::post('/qr-codes/{qrCode}/toggle', [User\QrCodeController::class, 'toggle'])->name('qr-codes.toggle');

@@ -10,13 +10,13 @@ use App\Models\QrCode;
 use App\Models\User;
 use App\Services\AnalyticsService;
 use App\Services\QrCodeService;
-use App\Support\CsvExporter;
+use App\Support\SpreadsheetExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class UserController extends Controller
 {
@@ -200,7 +200,7 @@ class UserController extends Controller
             ->with('status', $name.' was deleted. Their QR codes went back to the unassigned pool.');
     }
 
-    public function export(Request $request): StreamedResponse
+    public function export(Request $request): Response
     {
         $this->authorize('viewAny', User::class);
 
@@ -221,8 +221,9 @@ class UserController extends Controller
                 $user->last_login_at?->format('Y-m-d H:i'),
             ]);
 
-        return CsvExporter::stream(
-            'customers-'.now()->format('Y-m-d').'.csv',
+        return SpreadsheetExporter::download(
+            $request->string('format')->toString(),
+            'customers-'.now()->format('Y-m-d'),
             ['Name', 'Email', 'Company', 'Phone', 'Role', 'Status', 'QR codes', 'Total scans', 'Created', 'Last login'],
             $rows,
         );

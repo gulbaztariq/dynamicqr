@@ -13,7 +13,7 @@ use App\Services\QrImageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Batches are how stock gets made: either straight onto a customer, or as an
@@ -87,7 +87,7 @@ class BatchController extends Controller
     }
 
     /** Every code in the batch as a ZIP of PNGs plus a CSV manifest for the printer. */
-    public function download(Request $request, QrBatch $batch): StreamedResponse
+    public function download(Request $request, QrBatch $batch): BinaryFileResponse
     {
         $qrCodes = $batch->qrCodes()->with('owner')->get();
 

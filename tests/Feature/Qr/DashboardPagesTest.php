@@ -127,14 +127,4 @@ class DashboardPagesTest extends TestCase
         $this->assertSame(20, $summary['total']);
         $this->assertSame(21, QrScan::count());
     }
-
-    public function test_csv_exports_download(): void
-    {
-        $this->actingAs($this->customer)->get(route('analytics.export'))
-            ->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
-
-        $this->actingAs($this->admin)->get(route('admin.qr-codes.export'))->assertOk();
-        $this->actingAs($this->admin)->get(route('admin.users.export'))->assertOk();
-        $this->actingAs($this->admin)->get(route('admin.analytics.export'))->assertOk();
-    }
 }

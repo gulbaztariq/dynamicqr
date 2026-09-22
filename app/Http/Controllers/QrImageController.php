@@ -8,7 +8,7 @@ use App\Services\ShortCodeGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use ZipArchive;
 
 /**
@@ -53,7 +53,7 @@ class QrImageController extends Controller
      *
      * @param  Collection<int, QrCode>  $qrCodes
      */
-    public function streamZip(Collection $qrCodes, string $filename, array $design = []): StreamedResponse
+    public function streamZip(Collection $qrCodes, string $filename, array $design = []): BinaryFileResponse
     {
         $path = tempnam(sys_get_temp_dir(), 'qrzip');
         $zip = new ZipArchive;

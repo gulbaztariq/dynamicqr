@@ -2,24 +2,81 @@
     <x-ui.page-header title="QR codes"
         :description="number_format($counts['all']).' total · '.number_format($counts['unassigned']).' still in the unassigned pool'">
         <x-slot:actions>
-            <a href="{{ route('admin.qr-codes.export', request()->query()) }}" class="btn-secondary">
-                <x-icon name="download" class="h-4 w-4" />
-                CSV
-            </a>
-            <a href="{{ route('admin.qr-codes.download', request()->query()) }}" class="btn-secondary">
-                <x-icon name="download" class="h-4 w-4" />
-                Images (ZIP)
-            </a>
+            {{-- Exports follow the filters currently applied to the table. --}}
+            <x-ui.export-menu :route="route('admin.qr-codes.export')" :params="request()->query()"
+                              label="Export URLs">
+                <x-slot:extra>
+                    <x-ui.export-menu-item :href="route('admin.qr-codes.download', request()->query())"
+                        icon="qr" description="Printable artwork for this selection">
+                        QR images (PNG ZIP)
+                    </x-ui.export-menu-item>
+                    <x-ui.export-menu-item :href="route('admin.qr-codes.download', request()->query() + ['format' => 'svg'])"
+                        icon="qr" description="Vector artwork for large printing">
+                        QR images (SVG ZIP)
+                    </x-ui.export-menu-item>
+                </x-slot:extra>
+            </x-ui.export-menu>
+
             <a href="{{ route('admin.qr-codes.create') }}" class="btn-secondary">
                 <x-icon name="plus" class="h-4 w-4" />
                 Single code
             </a>
-            <a href="{{ route('admin.batches.create') }}" class="btn-primary">
-                <x-icon name="plus" class="h-4 w-4" />
-                Generate batch
+            <a href="{{ route('admin.batches.create') }}" class="btn-secondary">
+                More options
             </a>
         </x-slot:actions>
     </x-ui.page-header>
+
+    {{-- Generate in one go: type a number, optionally pick who gets them. --}}
+    <form method="POST" action="{{ route('admin.batches.store') }}"
+          class="card card-pad ring-brand-600/10">
+        @csrf
+
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end">
+            <div class="lg:w-56">
+                <label for="quick_quantity" class="label">How many QR codes?</label>
+                <input id="quick_quantity" name="quantity" type="number" inputmode="numeric"
+                       min="1" max="{{ config('qr.max_batch_quantity') }}"
+                       value="{{ old('quantity', 10) }}" required
+                       placeholder="e.g. 100"
+                       class="input mt-1.5 text-lg font-semibold @error('quantity') border-red-400 @enderror">
+            </div>
+
+            <div class="lg:w-64">
+                <label for="quick_user" class="label">
+                    Assign to <span class="font-normal text-slate-400">(optional)</span>
+                </label>
+                <select id="quick_user" name="user_id" class="input mt-1.5">
+                    <option value="">Keep as unassigned stock</option>
+                    @foreach ($customers as $customer)
+                        <option value="{{ $customer->id }}">
+                            {{ $customer->name }}{{ $customer->company ? ' — '.$customer->company : '' }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="lg:w-48">
+                <label for="quick_prefix" class="label">
+                    Label prefix <span class="font-normal text-slate-400">(optional)</span>
+                </label>
+                <input id="quick_prefix" name="label_prefix" type="text" placeholder="Standee"
+                       class="input mt-1.5">
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button type="submit" class="btn-primary">
+                    <x-icon name="plus" class="h-4 w-4" />
+                    Generate
+                </button>
+            </div>
+        </div>
+
+        <p class="mt-3 text-xs text-slate-500">
+            Codes are created instantly with permanent links. You can set their destinations,
+            reassign them or download the artwork at any time afterwards.
+        </p>
+    </form>
 
     {{-- Filters --}}
     <form method="GET" action="{{ route('admin.qr-codes.index') }}" class="card flex flex-col gap-3 p-4 lg:flex-row lg:items-center">

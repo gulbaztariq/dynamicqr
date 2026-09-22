@@ -2,9 +2,9 @@
     <x-ui.page-header title="Analytics" description="Scan performance across every customer and code.">
         <x-slot:actions>
             <x-ui.range-picker :days="$days" :route="route('admin.analytics')" :params="['user_id' => request('user_id')]" />
-            <a href="{{ route('admin.analytics.export', request()->only('range', 'user_id')) }}" class="btn-secondary">
-                <x-icon name="download" class="h-4 w-4" /> Export CSV
-            </a>
+            <x-ui.export-menu :route="route('admin.analytics.export')"
+                              :params="request()->only('range', 'user_id')"
+                              label="Export scans" />
         </x-slot:actions>
     </x-ui.page-header>
 

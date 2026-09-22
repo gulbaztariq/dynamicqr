@@ -48,6 +48,28 @@ Consequences worth remembering:
   only, never back at this dashboard). Any new place that accepts a target URL
   must use it, or a printed product becomes an open redirect.
 
+## Exports
+
+`app/Support/SpreadsheetExporter::download()` is the only export entry point.
+Give it a format, a basename without extension, a headings array and a row
+iterator; it picks Excel or CSV and sets the right headers. Unknown formats fall
+back to Excel on purpose, so a mistyped query string still returns a file.
+
+Two things to preserve:
+
+- Exports run off the **same filter pipeline as the table they sit on** (the
+  `filtered()` helper on the relevant controller), so what downloads always
+  matches what the user is looking at.
+- Rows come from `cursor()`, and OpenSpout spools to a temp file, so a 50,000-row
+  export never materialises as an array. Don't collect rows into memory first.
+
+A customer's export must be scoped to `ownedBy($request->user())`; there is a
+test asserting it cannot leak another customer's codes.
+
+Note that `response()->download()` returns a `BinaryFileResponse`, **not** a
+`StreamedResponse` — typing one of those methods as `StreamedResponse` is a
+runtime TypeError, not a static warning.
+
 ## Charts
 
 `resources/js/charts.js` owns all Chart.js configuration; Blade only emits

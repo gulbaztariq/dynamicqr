@@ -3,10 +3,9 @@
         :description="$selected ? 'Filtered to '.($selected->label ?: $selected->code) : 'Across all of your QR codes'">
         <x-slot:actions>
             <x-ui.range-picker :days="$days" :route="route('analytics')" :params="['qr' => request('qr')]" />
-            <a href="{{ route('analytics.export', request()->only('range', 'qr')) }}" class="btn-secondary">
-                <x-icon name="download" class="h-4 w-4" />
-                Export CSV
-            </a>
+            <x-ui.export-menu :route="route('analytics.export')"
+                              :params="request()->only('range', 'qr')"
+                              label="Export scans" />
         </x-slot:actions>
     </x-ui.page-header>
 

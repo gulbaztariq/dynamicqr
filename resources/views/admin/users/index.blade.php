@@ -1,9 +1,8 @@
 <x-layouts.dashboard title="Customers">
     <x-ui.page-header title="Customers" description="Everyone with a dashboard login.">
         <x-slot:actions>
-            <a href="{{ route('admin.users.export') }}" class="btn-secondary">
-                <x-icon name="download" class="h-4 w-4" /> CSV
-            </a>
+            <x-ui.export-menu :route="route('admin.users.export')" :params="request()->query()"
+                              label="Export customers" />
             <a href="{{ route('admin.users.create') }}" class="btn-primary">
                 <x-icon name="plus" class="h-4 w-4" /> Add customer
             </a>

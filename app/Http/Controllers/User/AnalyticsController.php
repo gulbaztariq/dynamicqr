@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\QrCode;
 use App\Models\QrScan;
 use App\Services\AnalyticsService;
-use App\Support\CsvExporter;
+use App\Support\SpreadsheetExporter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class AnalyticsController extends Controller
 {
@@ -41,7 +41,7 @@ class AnalyticsController extends Controller
     }
 
     /** Raw scan rows for the selected filters, for the customer's own reporting. */
-    public function export(Request $request): StreamedResponse
+    public function export(Request $request): Response
     {
         $days = $this->range($request);
 
@@ -65,8 +65,9 @@ class AnalyticsController extends Controller
             $scan->is_unique ? 'Yes' : 'No',
         ]);
 
-        return CsvExporter::stream(
-            'qr-scans-'.now()->format('Y-m-d').'.csv',
+        return SpreadsheetExporter::download(
+            $request->string('format')->toString(),
+            'qr-scans-'.now()->format('Y-m-d'),
             ['Scanned at', 'Code', 'Label', 'Device', 'OS', 'Browser', 'Country', 'City', 'Source', 'Sent to', 'First-time visitor'],
             $rows,
         );

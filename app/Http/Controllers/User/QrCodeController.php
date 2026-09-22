@@ -8,9 +8,11 @@ use App\Models\QrCode;
 use App\Services\AnalyticsService;
 use App\Services\QrCodeService;
 use App\Services\QrImageService;
+use App\Support\SpreadsheetExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class QrCodeController extends Controller
 {
@@ -22,11 +24,7 @@ class QrCodeController extends Controller
 
     public function index(Request $request): View
     {
-        $qrCodes = QrCode::ownedBy($request->user())
-            ->search($request->string('q')->toString())
-            ->status($request->string('status')->toString())
-            ->orderByRaw('CASE WHEN target_url IS NULL THEN 0 ELSE 1 END') // Unconfigured codes first — they need attention.
-            ->orderByDesc('scan_count')
+        $qrCodes = $this->filtered($request)
             ->paginate(15)
             ->withQueryString();
 
@@ -94,6 +92,45 @@ class QrCodeController extends Controller
         return back()->with('status', $qrCode->fresh()->is_active
             ? 'QR code resumed — it is redirecting again.'
             : 'QR code paused — scans will see a "temporarily unavailable" page.');
+    }
+
+    /**
+     * Download this customer's own codes and the links behind them, as Excel or
+     * CSV. Honours whatever filters the list is currently showing.
+     */
+    public function export(Request $request): Response
+    {
+        $rows = $this->filtered($request)
+            ->cursor()
+            ->map(fn (QrCode $qrCode) => [
+                $qrCode->code,
+                $qrCode->label,
+                $qrCode->short_url,
+                $qrCode->target_url,
+                $qrCode->statusLabel(),
+                $qrCode->scan_count,
+                $qrCode->unique_scan_count,
+                $qrCode->last_scanned_at?->format('Y-m-d H:i'),
+                $qrCode->created_at?->format('Y-m-d'),
+            ]);
+
+        return SpreadsheetExporter::download(
+            $request->string('format')->toString(),
+            'my-qr-links-'.now()->format('Y-m-d'),
+            ['Code', 'Name', 'QR link (printed)', 'Destination', 'Status', 'Scans', 'Unique visitors', 'Last scan', 'Created'],
+            $rows,
+        );
+    }
+
+    /** Shared filter pipeline, so the table and the export never disagree. */
+    private function filtered(Request $request)
+    {
+        return QrCode::ownedBy($request->user())
+            ->search($request->string('q')->toString())
+            ->status($request->string('status')->toString())
+            // Unconfigured codes first — they are the ones needing attention.
+            ->orderByRaw('CASE WHEN target_url IS NULL THEN 0 ELSE 1 END')
+            ->orderByDesc('scan_count');
     }
 
     private function range(Request $request): int

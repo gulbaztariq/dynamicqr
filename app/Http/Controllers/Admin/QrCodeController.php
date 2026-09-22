@@ -14,11 +14,12 @@ use App\Rules\SafeRedirectUrl;
 use App\Services\AnalyticsService;
 use App\Services\QrCodeService;
 use App\Services\QrImageService;
-use App\Support\CsvExporter;
+use App\Support\SpreadsheetExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class QrCodeController extends Controller
 {
@@ -171,7 +172,7 @@ class QrCodeController extends Controller
     }
 
     /** ZIP of the printable artwork for the current filter selection. */
-    public function downloadZip(Request $request): StreamedResponse
+    public function downloadZip(Request $request): BinaryFileResponse
     {
         $qrCodes = $this->filtered($request)->with('owner')->limit(2000)->get();
 
@@ -184,7 +185,7 @@ class QrCodeController extends Controller
         );
     }
 
-    public function export(Request $request): StreamedResponse
+    public function export(Request $request): Response
     {
         $rows = $this->filtered($request)
             ->with('owner:id,name', 'batch:id,name')
@@ -203,8 +204,9 @@ class QrCodeController extends Controller
                 $qrCode->created_at?->format('Y-m-d'),
             ]);
 
-        return CsvExporter::stream(
-            'qr-codes-'.now()->format('Y-m-d').'.csv',
+        return SpreadsheetExporter::download(
+            $request->string('format')->toString(),
+            'qr-codes-'.now()->format('Y-m-d'),
             ['Code', 'Label', 'Short link', 'Destination', 'Assigned to', 'Batch', 'Status', 'Scans', 'Unique scans', 'Last scan', 'Created'],
             $rows,
         );
